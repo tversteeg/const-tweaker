@@ -13,3 +13,7 @@ categories = []
 
 [dependencies]
 anyhow = "1.0"
+async-std = "1.5.0"
+dashmap = "3.7.0"
+lazy_static = "1.4.0"
+tide = "0.6.0"
