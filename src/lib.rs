@@ -10,7 +10,7 @@
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Initialize the server at 'http://127.0.0.1:9938'
-//!     const_tweaker::run();
+//!     const_tweaker::run()?;
 //!
 //!     // Enter a GUI/Game loop
 //!     loop {
@@ -108,6 +108,7 @@ macro_rules! tweak {
 lazy_static::lazy_static! {
     #[doc(hidden)]
     pub static ref __F64S: DashMap<&'static str, f64> = DashMap::new();
+    #[doc(hidden)]
     pub static ref __BOOLS: DashMap<&'static str, bool> = DashMap::new();
 }
 
