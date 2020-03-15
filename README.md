@@ -12,7 +12,9 @@ It's especially useful for gamedev where you want to tweak some variables withou
 ## Example
 
 ```rust
-const VALUE: f64 = 10.0;
+const_tweaker::tweak! {
+    VALUE: f64 = 0.0;
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Initialize the server at 'http://127.0.0.1:9938'
@@ -24,8 +26,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 		// Print the constant value that can be changed from the website.
 		println!("VALUE: {}", VALUE);
-
-		break;
 	}
 
 	Ok(())
