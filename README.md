@@ -9,6 +9,8 @@ Tweak const variables live from a web GUI.
 This library opens a web interface when the application is run, allowing you to change the values of constants in real time.
 It's especially useful for gamedev where you want to tweak some variables without introducing a hot-reloading scripting language for it.
 
+The server is opened at [`127.0.0.1:9938`](http://127.0.0.1:9938).
+
 ## Example
 
 ```rust
@@ -16,18 +18,16 @@ const_tweaker::tweak! {
     VALUE: f64 = 0.0;
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
 	// Initialize the server at 'http://127.0.0.1:9938'
-	const_tweaker::run();
+	const_tweaker::run().expect("Could not run server");
 
 	// Enter a GUI/Game loop
 	loop {
-		// ...
-
-		// Print the constant value that can be changed from the website.
+		// Print the constant value that can be changed from the website
 		println!("VALUE: {}", VALUE);
-	}
 
-	Ok(())
+		// ...
+	}
 }
 ```
