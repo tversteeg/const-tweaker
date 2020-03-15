@@ -2,14 +2,18 @@
 //!
 //! This library starts a web server at `http://127.0.0.1:9938` where you can change the values of `const` variables in your crate.
 //!
+//! `f64` & `bool` are the types that are currently supported.
+//!
 //! ## Example
 //! ```rust
+//! // Tweak `VALUE` when running in debug mode
 //! const_tweaker::tweak! {
 //!     VALUE: f64 = 0.0;
 //! }
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Initialize the server at 'http://127.0.0.1:9938'
+//!     // Initialize the server at 'http://127.0.0.1:9938' when running in debug mode
+//!     #[cfg(debug_assertions)]
 //!     const_tweaker::run()?;
 //!
 //!     // Enter a GUI/Game loop

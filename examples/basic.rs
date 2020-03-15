@@ -7,7 +7,8 @@ const_tweaker::tweak! {
 }
 
 fn main() -> Result<()> {
-    // Run the tweaker server
+    // Run the tweaker server only when in debug mode
+    #[cfg(debug_assertions)]
     const_tweaker::run()?;
 
     // Print the constant value times every second
