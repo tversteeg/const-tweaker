@@ -7,9 +7,9 @@ edition = "2018"
 readme = "README.md"
 repository = "https://github.com/tversteeg/const-tweaker"
 documentation = "https://docs.rs/const-tweaker"
-description = ""
-keywords = []
-categories = []
+description = "Tweak constant variables live from a web GUI"
+keywords = ["gamedev", "gui", "const"]
+categories = ["game-development", "config", "development-tools", "rust-patterns"]
 
 [dependencies]
 anyhow = "1.0.27"

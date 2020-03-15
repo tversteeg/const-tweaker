@@ -6,8 +6,8 @@ Tweak const variables live from a web GUI.
 <a href="https://docs.rs/const-tweaker"><img src="https://img.shields.io/badge/api-rustdoc-blue.svg" alt="Rust Documentation"/></a>
 <img src="https://img.shields.io/crates/l/const-tweaker.svg" alt="License"/>
 
-This library opens a web interface when the crate is run in debug mode, allowing you to change the values of constants in real time.
-It's especially useful for gamedev where you want to tweak some variables without introducing a scripting language for it.
+This library opens a web interface when the application is run, allowing you to change the values of constants in real time.
+It's especially useful for gamedev where you want to tweak some variables without introducing a hot-reloading scripting language for it.
 
 ## Example
 
