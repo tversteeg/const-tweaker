@@ -265,6 +265,7 @@ mod tests {
         BOOL: bool = true;
     }
 
+    #[allow(clippy::all)]
     #[test]
     fn equality_test() {
         assert_eq!(BOOL, true);
