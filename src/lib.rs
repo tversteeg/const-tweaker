@@ -51,6 +51,18 @@ use tide::{Request, Response};
 macro_rules! tweak {
     ($name:ident : f64 = $default_value:expr; $($other_lines:tt)*) => {
         $crate::tweak!($name, f64, $default_value, $crate::__F64S, $($other_lines)*);
+        impl std::ops::Add<f64> for $name {
+            type Output = f64;
+            fn add(self, other: f64) -> f64 {
+                self.get() + other
+            }
+        }
+        impl std::ops::Sub<f64> for $name {
+            type Output = f64;
+            fn sub(self, other: f64) -> f64 {
+                self.get() - other
+            }
+        }
     };
     ($name:ident : bool = $default_value:expr; $($other_lines:tt)*) => {
         $crate::tweak!($name, bool, $default_value, $crate::__BOOLS, $($other_lines)*);
@@ -63,6 +75,7 @@ macro_rules! tweak {
         #[allow(missing_copy_implementations)]
         #[allow(non_camel_case_types)]
         #[allow(dead_code)]
+        #[derive(Copy, Clone)]
         struct $name { __private_field: () }
         impl $name {
             pub fn get(&self) -> $type {
@@ -81,16 +94,6 @@ macro_rules! tweak {
                 }
             }
         }
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(f, "{:?}", self.get())
-            }
-        }
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(f, "{:?}", self.get())
-            }
-        }
         impl std::ops::Deref for $name {
             type Target = $type;
 
@@ -101,8 +104,25 @@ macro_rules! tweak {
                 unsafe { std::mem::transmute::<&$type, &'static $type>(&self.get()) }
             }
         }
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, "{:?}", self.get())
+            }
+        }
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, "{:?}", self.get())
+            }
+        }
+        impl std::cmp::PartialEq<$type> for $name {
+            fn eq(&self, other: &$type) -> bool {
+                self.get() == *other
+            }
+        }
+        #[allow(dead_code)]
         #[doc(hidden)]
         static $name: $name = $name { __private_field: () };
+
         // Call it recursively for all other lines
         $crate::tweak!($($other_lines)*);
     };
@@ -240,8 +260,17 @@ async fn handle_set_bool(mut request: Request<()>) -> Response {
 
 #[cfg(test)]
 mod tests {
+    crate::tweak! {
+        F64: f64 = 0.0;
+        BOOL: bool = true;
+    }
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn equality_test() {
+        assert_eq!(BOOL, true);
+        assert_eq!(F64, 0.0);
+
+        assert!(BOOL != false);
+        assert!(F64 != 1.0);
     }
 }

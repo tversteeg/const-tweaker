@@ -13,8 +13,8 @@ fn main() -> Result<()> {
 
     // Print the constant value times every second
     loop {
-        dbg!(*F64_VALUE);
-        dbg!(*BOOL_VALUE);
+        dbg!(F64_VALUE);
+        dbg!(BOOL_VALUE);
 
         thread::sleep(Duration::from_secs(1));
     }
