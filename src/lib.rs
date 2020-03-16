@@ -144,29 +144,17 @@ pub fn run() -> Result<()> {
 /// Build the actual site.
 async fn main_site(_: Request<()>) -> Response {
     let body = html! {
-        h1 { : "Const Tweaker Web Interface" }
-        p { : f64s() }
-        p { : bools() }
-        span(id="status"){ }
-        script { : Raw(r#"
-async function send(source, value, data_type) {
-    // Change the label
-    var label_element = document.getElementById(source + '_label');
-    label_element.innerHTML = value;
-
-    // Make the request
-    fetch('/set/' + data_type, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({key: source, value: value})
-    }).catch(err => {
-        var status_element = document.getElementById('status');
-        status.innerHTML = 'HTTP Error: ' + err.status;
-    });
-}
-"#) }
+        style { : include_str!("bulma.css") }
+        style { : "* { font-family: sans-serif}" }
+        div (class="container") {
+            h1 (class="title") { : "Const Tweaker Web Interface" }
+            p { : f64s() }
+            p { : bools() }
+            div (class="notification is-danger") {
+                span(id="status") { }
+            }
+        }
+        script { : Raw(include_str!("send.js")) }
     };
 
     Response::new(200)
@@ -178,20 +166,26 @@ fn f64s() -> impl Render {
     // Render sliders
     owned_html! {
         @for ref_multi in __F64S.iter() {
-            p {
-                span { : ref_multi.key() }
-                br {}
-                input(type="range",
-                    id=ref_multi.key(),
-                    min="-100",
-                    max="100",
-                    defaultValue=ref_multi.value(),
-                    // The value is a string, convert it to a number so it can be properly
-                    // deserialized by serde
-                    oninput=send(&ref_multi, "Number(this.value)", "f64"))
-                { }
-                span (id=format!("{}_label", ref_multi.key()))
-                    { : ref_multi.value() }
+            div (class="columns box") {
+                div (class="column is-narrow") {
+                    span (class="tag") { : ref_multi.key() }
+                }
+                div (class="column") {
+                    input (type="range",
+                        id=ref_multi.key(),
+                        min="-100",
+                        max="100",
+                        defaultValue=ref_multi.value(),
+                        style="width: 100%",
+                        // The value is a string, convert it to a number so it can be properly
+                        // deserialized by serde
+                        oninput=send(&ref_multi, "Number(this.value)", "f64"))
+                    { }
+                }
+                div (class="column is-narrow") {
+                    span (id=format!("{}_label", ref_multi.key()), class="is-small")
+                        { : ref_multi.value() }
+                }
             }
         }
     }
@@ -201,16 +195,21 @@ fn bools() -> impl Render {
     // Render checkboxes
     owned_html! {
         @ for ref_multi in __BOOLS.iter() {
-            p {
-                span { : ref_multi.key() }
-                br {}
-                input(type="checkbox",
-                    id=ref_multi.key(),
-                    value=ref_multi.value().to_string(),
-                    onclick=send(&ref_multi, "this.checked", "bool"))
-                    { }
-                span (id=format!("{}_label", ref_multi.key()))
-                    { : ref_multi.value().to_string() }
+            div (class="columns box") {
+                div (class="column is-narrow") {
+                    span (class="tag") { : ref_multi.key() }
+                }
+                div (class="column") {
+                    input (type="checkbox",
+                        id=ref_multi.key(),
+                        value=ref_multi.value().to_string(),
+                        onclick=send(&ref_multi, "this.checked", "bool"))
+                        { }
+                }
+                div (class="column is-narrow") {
+                    span (id=format!("{}_label", ref_multi.key()))
+                        { : ref_multi.value().to_string() }
+                }
             }
         }
     }
