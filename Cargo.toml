@@ -11,6 +11,9 @@ description = "Tweak constant variables live from a web GUI"
 keywords = ["gamedev", "gui", "const"]
 categories = ["game-development", "config", "development-tools", "rust-patterns"]
 
+[workspace]
+members = ["macro"]
+
 [dependencies]
 anyhow = "1.0.27"
 async-std = "1.5.0"
@@ -19,3 +22,4 @@ horrorshow = "0.8.1"
 lazy_static = "1.4.0"
 serde = { version = "1.0.104", features = ["derive"] }
 tide = "0.6.0"
+const-tweaker-attribute = { path = "./macro", version = "*" }

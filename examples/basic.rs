@@ -1,10 +1,17 @@
 use anyhow::Result;
 use std::{thread, time::Duration};
 
-const_tweaker::tweak! {
-    F64_VALUE: f64 = 0.0;
-    BOOL_VALUE: bool = false;
-}
+// Custom slider minimum value, maximum value & step size
+#[const_tweaker::tweak(min = 0.0, max = 1.0, step = 0.1)]
+const F64_VALUE_CUSTOM: f64 = 0.0;
+
+// Default values for slider
+#[const_tweaker::tweak]
+const F64_VALUE_DEFAULT: f64 = 0.0;
+
+// Checkbox
+#[const_tweaker::tweak]
+const BOOL_VALUE: bool = false;
 
 fn main() -> Result<()> {
     // Run the tweaker server only when in debug mode
@@ -13,8 +20,7 @@ fn main() -> Result<()> {
 
     // Print the constant value times every second
     loop {
-        dbg!(F64_VALUE);
-        dbg!(BOOL_VALUE);
+        dbg!(F64_VALUE_CUSTOM, F64_VALUE_DEFAULT, BOOL_VALUE);
 
         thread::sleep(Duration::from_secs(1));
     }
