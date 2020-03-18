@@ -22,4 +22,4 @@ horrorshow = "0.8.1"
 lazy_static = "1.4.0"
 serde = { version = "1.0.104", features = ["derive"] }
 tide = "0.6.0"
-const-tweaker-attribute = { path = "./macro", version = "*" }
+const-tweaker-attribute = { path = "./macro", version = "0" }

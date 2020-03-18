@@ -2,7 +2,13 @@
 name = "const-tweaker-attribute"
 version = "0.1.0"
 authors = ["Thomas Versteeg <thomasversteeg@gmx.com>"]
+license = "AGPL-3.0-or-later"
 edition = "2018"
+repository = "https://github.com/tversteeg/const-tweaker"
+documentation = "https://docs.rs/const-tweaker"
+description = "Tweak constant variables live from a web GUI"
+keywords = ["gamedev", "gui", "const"]
+categories = ["game-development", "config", "development-tools", "rust-patterns"]
 
 [lib]
 proc-macro = true
