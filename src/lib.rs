@@ -216,7 +216,12 @@ fn widgets() -> impl Render {
 
 /// The javascript call to send the updated data.
 fn send(key: &str, look_for: &str, data_type: &str) -> String {
-    format!("send('{}', {}, '{}')", key, look_for, data_type)
+    format!(
+        "send('{}', {}, '{}')",
+        key.replace("\\", "\\\\"),
+        look_for,
+        data_type
+    )
 }
 
 // Handle setting of values
