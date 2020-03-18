@@ -15,8 +15,9 @@ After running the constants can be changed opened at [`127.0.0.1:9938`](http://1
 
 ```rust
 // Create a slider to tweak 'VALUE' in the web GUI
-#[const_tweaker::tweak]
-const VALUE: f64 = 0.0;
+const_tweaker::tweak! {
+    VALUE: f64 = 0.0;
+}
 
 fn main() {
 	// Initialize the web GUI at 'http://127.0.0.1:9938'
