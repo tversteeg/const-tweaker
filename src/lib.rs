@@ -37,7 +37,7 @@
 //! #[const_tweaker::tweak]
 //! const DEFAULT_VALUE: f64 = 0.0;
 //!
-//! // Spawns a slider with 10 steps from 0-10
+//! // Spawns a slider with 10 steps from 0-1
 //! #[const_tweaker::tweak(min = 0.0, max = 1.0, step = 0.1)]
 //! const CUSTOM_VALUE: f64 = 0.0;
 //! ```
