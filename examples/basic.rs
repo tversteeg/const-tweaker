@@ -13,6 +13,10 @@ const F64_VALUE_DEFAULT: f64 = 0.0;
 #[const_tweaker::tweak]
 const BOOL_VALUE: bool = false;
 
+// Text input
+#[const_tweaker::tweak]
+const STRING_VALUE: &str = "Hello";
+
 fn main() -> Result<()> {
     // Run the tweaker server only when in debug mode
     #[cfg(debug_assertions)]
@@ -20,7 +24,12 @@ fn main() -> Result<()> {
 
     // Print the constant value times every second
     loop {
-        dbg!(F64_VALUE_CUSTOM, F64_VALUE_DEFAULT, BOOL_VALUE);
+        dbg!(
+            F64_VALUE_CUSTOM,
+            F64_VALUE_DEFAULT,
+            BOOL_VALUE,
+            STRING_VALUE
+        );
 
         thread::sleep(Duration::from_secs(1));
     }

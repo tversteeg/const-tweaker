@@ -1,7 +1,10 @@
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, spanned::Spanned, AttributeArgs, Error, Expr, ItemConst, Type};
+use syn::{
+    parse_macro_input, spanned::Spanned, AttributeArgs, Error, Expr, ItemConst, Type,
+    Type::Reference,
+};
 
 type TokenStream2 = proc_macro2::TokenStream;
 
@@ -52,6 +55,11 @@ fn field_init(
                             value: #default_value,
                         }
                     }),
+                    "str" => Ok(quote! {
+                        const_tweaker::Field::String {
+                            value: #default_value.to_string(),
+                        }
+                    }),
                     _ => mismatching_type_error(&ty),
                 }
             }
@@ -69,6 +77,7 @@ fn field_name(ty: &Type) -> Result<TokenStream2, TokenStream> {
             Some(type_ident) => match &*(type_ident.to_string()) {
                 "f64" => Ok(quote! { const_tweaker::Field::F64 }),
                 "bool" => Ok(quote! { const_tweaker::Field::Bool }),
+                "str" => Ok(quote! { const_tweaker::Field::String }),
                 _ => mismatching_type_error(&ty),
             },
             None => mismatching_type_error(&ty),
@@ -83,7 +92,7 @@ fn mismatching_type_error<T>(ty: &Type) -> Result<T, TokenStream> {
     Err(TokenStream::from(
         Error::new(
             ty.span(),
-            "expected bool or f64, other types are not supported in const_tweaker (yet)",
+            "expected bool, &str or f64, other types are not supported in const_tweaker (yet)",
         )
         .to_compile_error(),
     ))
@@ -93,7 +102,11 @@ fn mismatching_type_error<T>(ty: &Type) -> Result<T, TokenStream> {
 fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, TokenStream> {
     let name = input.ident;
     let init_name = format_ident!("{}_INIT", name);
-    let ty = input.ty;
+    let ty = if let Reference(type_ref) = *input.ty {
+        type_ref.elem
+    } else {
+        input.ty
+    };
     let field_init = field_init(&*ty, Metadata::from_attributes(args)?, *input.expr)?;
     let field_name = field_name(&*ty)?;
 

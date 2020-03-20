@@ -48,6 +48,13 @@
 //! #[const_tweaker::tweak]
 //! const DEFAULT_VALUE: bool = true;
 //! ```
+//!
+//! `&str`
+//! ```rust
+//! // Spaws a textbox
+//! #[const_tweaker::tweak]
+//! const DEFAULT_VALUE: &str = "Hi";
+//! ```
 
 use anyhow::Result;
 use async_std::task;
@@ -61,7 +68,7 @@ pub use const_tweaker_attribute::tweak;
 
 /// Type representing the const field with metadata.
 #[doc(hidden)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub enum Field {
     F64 {
         value: f64,
@@ -74,6 +81,9 @@ pub enum Field {
     },
     Bool {
         value: bool,
+    },
+    String {
+        value: String,
     },
 }
 
@@ -94,6 +104,17 @@ impl Field {
         match self {
             Field::Bool { ref mut value, .. } => {
                 *value = new_value;
+                self
+            }
+            _ => panic!("Unexpected type, please report an issue"),
+        }
+    }
+
+    /// Set a string value when the field matches the proper variant.
+    pub fn set_string(&mut self, new_value: &str) -> &Self {
+        match self {
+            Field::String { ref mut value, .. } => {
+                *value = new_value.to_string();
                 self
             }
             _ => panic!("Unexpected type, please report an issue"),
@@ -144,6 +165,21 @@ impl Field {
                 }
             })
             .to_string(),
+            Field::String { value } => (owned_html! {
+                div (class="column") {
+                    input (type="text",
+                        id=key,
+                        value=value,
+                        style="width: 100%",
+                        onchange=send(key, "this.value", "string"))
+                    { }
+                }
+                div (class="column is-narrow") {
+                    span (id=format!("{}_label", key))
+                    { : value.to_string() }
+                }
+            })
+            .to_string(),
         }
     }
 }
@@ -172,6 +208,7 @@ pub fn run() -> Result<()> {
             app.at("/").get(main_site);
             app.at("/set/f64").post(handle_set_f64);
             app.at("/set/bool").post(handle_set_bool);
+            app.at("/set/string").post(handle_set_string);
             app.listen("127.0.0.1:9938").await
         })
         .expect("Running web server failed");
@@ -239,6 +276,15 @@ async fn handle_set_bool(mut request: Request<()>) -> Response {
     DATA.get_mut(&*post_data.key)
         .expect("Could not get item from map")
         .set_bool(post_data.value);
+
+    Response::new(200)
+}
+
+async fn handle_set_string(mut request: Request<()>) -> Response {
+    let post_data: PostData<String> = request.body_json().await.expect("Could not decode JSON");
+    DATA.get_mut(&*post_data.key)
+        .expect("Could not get item from map")
+        .set_string(&post_data.value);
 
     Response::new(200)
 }
