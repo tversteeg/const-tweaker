@@ -130,7 +130,7 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
                     #field_name { ref value, .. } => unsafe {
                         // Make the reference static, so it leaks, but that shouldn't matter
                         // because there will always be one reference since the dashmap is global
-                        std::mem::transmute::<&#ty, &'static #ty>(value)
+                        std::mem::transmute::<&#ty, &'static #ty>(value as &#ty)
                     },
                     _ => panic!("Type mismatch, this probably means there's a duplicate value in the map, please report an issue")
                 }
