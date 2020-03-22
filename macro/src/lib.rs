@@ -48,16 +48,25 @@ fn field_init(
                             min: #min,
                             max: #max,
                             step: #step,
+
+                            module: module_path!().to_string(),
+                            file: concat!(file!(), ":", line!()).to_string(),
                         }
                     }),
                     "bool" => Ok(quote! {
                         const_tweaker::Field::Bool {
                             value: #default_value,
+
+                            module: module_path!().to_string(),
+                            file: concat!(file!(), ":", line!()).to_string(),
                         }
                     }),
                     "str" => Ok(quote! {
                         const_tweaker::Field::String {
                             value: #default_value.to_string(),
+
+                            module: module_path!().to_string(),
+                            file: concat!(file!(), ":", line!()).to_string(),
                         }
                     }),
                     _ => mismatching_type_error(&ty),
@@ -122,11 +131,11 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
             pub fn get(&self) -> &'static #ty {
                 // Insert the default value only the first time
                 #init_name.call_once(|| {
-                    const_tweaker::DATA.insert(stringify!(#name), #field_init);
+                    const_tweaker::DATA.insert(concat!(module_path!(), "::", stringify!(#name)), #field_init);
                 });
 
                 // Retrieve the value from the datastore and unwrap it
-                match const_tweaker::DATA.get(stringify!(#name)).expect("Value should have been added already").value() {
+                match const_tweaker::DATA.get(concat!(module_path!(), "::", stringify!(#name))).expect("Value should have been added already").value() {
                     #field_name { ref value, .. } => unsafe {
                         // Make the reference static, so it leaks, but that shouldn't matter
                         // because there will always be one reference since the dashmap is global

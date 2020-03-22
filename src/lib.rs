@@ -78,12 +78,27 @@ pub enum Field {
         max: f64,
         /// Step increase of slider.
         step: f64,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
     },
     Bool {
         value: bool,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
     },
     String {
         value: String,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
     },
 }
 
@@ -129,6 +144,7 @@ impl Field {
                 min,
                 max,
                 step,
+                ..
             } => {
                 (owned_html! {
                     div (class="column") {
@@ -151,7 +167,7 @@ impl Field {
                 })
                 .to_string()
             }
-            Field::Bool { value } => (owned_html! {
+            Field::Bool { value, .. } => (owned_html! {
                 div (class="column") {
                     input (type="checkbox",
                         id=key,
@@ -165,7 +181,7 @@ impl Field {
                 }
             })
             .to_string(),
-            Field::String { value } => (owned_html! {
+            Field::String { value, .. } => (owned_html! {
                 div (class="column") {
                     input (type="text",
                         id=key,
@@ -180,6 +196,24 @@ impl Field {
                 }
             })
             .to_string(),
+        }
+    }
+
+    /// The full module path where the constant lives.
+    pub fn module_path(&self) -> &str {
+        match self {
+            Field::F64 { module, .. }
+            | Field::Bool { module, .. }
+            | Field::String { module, .. } => &*module,
+        }
+    }
+
+    /// The file with line number.
+    pub fn file(&self) -> &str {
+        match self {
+            Field::F64 { file, .. } | Field::Bool { file, .. } | Field::String { file, .. } => {
+                &*file
+            }
         }
     }
 }
@@ -222,11 +256,18 @@ async fn main_site(_: Request<()>) -> Response {
     let body = html! {
         style { : include_str!("bulma.css") }
         style { : "* { font-family: sans-serif}" }
-        div (class="container") {
-            h1 (class="title") { : "Const Tweaker Web Interface" }
-            p { : widgets() }
-            div (class="notification is-danger") {
-                span(id="status") { }
+        body {
+            // Title
+            div (class="container box") {
+                h1 (class="title is-1") { : "Const Tweaker Web Interface" }
+            }
+            // All the widgets
+            : widgets();
+            // The error message
+            div (class="container") {
+                div (class="notification is-danger") {
+                    span(id="status") { }
+                }
             }
         }
         script { : Raw(include_str!("send.js")) }
@@ -240,13 +281,35 @@ async fn main_site(_: Request<()>) -> Response {
 /// Render all widgets.
 fn widgets() -> impl Render {
     owned_html! {
-        @for ref_multi in DATA.iter() {
-            div (class="columns box") {
-                div (class="column is-narrow") {
-                    span (class="tag") { : ref_multi.key() }
+        // All modules go in their own panels
+        @for module in modules().into_iter() {
+            section (class="section") {
+                div (class="container box") {
+                    h3 (class="title is-3") { : format!("Module: \"{}\"", module) }
+
+                    // All widgets go into their own column box
+                    @for ref_multi in DATA.iter().filter(|kv| kv.value().module_path() == module) {
+                        : widget(ref_multi.key(), ref_multi.value())
+                    }
                 }
-                : Raw(ref_multi.value().to_html_widget(ref_multi.key()))
             }
+        }
+    }
+}
+
+/// Render a single widget.
+fn widget<'a>(key: &'a str, field: &'a Field) -> impl Render + 'a {
+    owned_html! {
+        div (class="columns") {
+            div (class="column is-narrow") {
+                // module::CONSTANT
+                span (class="is-small") { : key }
+
+                br {}
+                // file:line
+                span (class="tag") { : field.file() }
+            }
+            : Raw(field.to_html_widget(key))
         }
     }
 }
@@ -287,4 +350,18 @@ async fn handle_set_string(mut request: Request<()>) -> Response {
         .set_string(&post_data.value);
 
     Response::new(200)
+}
+
+/// Get a list of all modules.
+fn modules() -> Vec<String> {
+    let mut modules: Vec<_> = DATA
+        .iter()
+        .map(|kv| kv.value().module_path().to_string())
+        .collect::<_>();
+
+    // Remove duplicate entries
+    modules.sort();
+    modules.dedup();
+
+    modules
 }
