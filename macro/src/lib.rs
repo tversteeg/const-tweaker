@@ -50,7 +50,8 @@ fn field_init(
                             step: #step,
 
                             module: module_path!().to_string(),
-                            file: concat!(file!(), ":", line!()).to_string(),
+                            file: file!().to_string(),
+                            line: line!(),
                         }
                     }),
                     "bool" => Ok(quote! {
@@ -58,7 +59,8 @@ fn field_init(
                             value: #default_value,
 
                             module: module_path!().to_string(),
-                            file: concat!(file!(), ":", line!()).to_string(),
+                            file: file!().to_string(),
+                            line: line!(),
                         }
                     }),
                     "str" => Ok(quote! {
@@ -66,7 +68,8 @@ fn field_init(
                             value: #default_value.to_string(),
 
                             module: module_path!().to_string(),
-                            file: concat!(file!(), ":", line!()).to_string(),
+                            file: file!().to_string(),
+                            line: line!(),
                         }
                     }),
                     _ => mismatching_type_error(&ty),

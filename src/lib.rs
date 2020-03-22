@@ -61,7 +61,7 @@ use async_std::task;
 use dashmap::DashMap;
 use horrorshow::{html, owned_html, Raw, Render};
 use serde::Deserialize;
-use std::thread;
+use std::{cmp::Ordering, thread};
 use tide::{Request, Response};
 
 pub use const_tweaker_attribute::tweak;
@@ -83,6 +83,8 @@ pub enum Field {
         module: String,
         /// Rust file location.
         file: String,
+        /// Rust line number in file.
+        line: u32,
     },
     Bool {
         value: bool,
@@ -91,6 +93,8 @@ pub enum Field {
         module: String,
         /// Rust file location.
         file: String,
+        /// Rust line number in file.
+        line: u32,
     },
     String {
         value: String,
@@ -99,6 +103,8 @@ pub enum Field {
         module: String,
         /// Rust file location.
         file: String,
+        /// Rust line number in file.
+        line: u32,
     },
 }
 
@@ -209,10 +215,19 @@ impl Field {
     }
 
     /// The file with line number.
-    pub fn file(&self) -> &str {
+    pub fn file(&self) -> String {
         match self {
-            Field::F64 { file, .. } | Field::Bool { file, .. } | Field::String { file, .. } => {
-                &*file
+            Field::F64 { file, line, .. }
+            | Field::Bool { file, line, .. }
+            | Field::String { file, line, .. } => format!("{}:{}", file, line),
+        }
+    }
+
+    /// Just the line number in the file.
+    pub fn line_number(&self) -> u32 {
+        match self {
+            Field::F64 { line, .. } | Field::Bool { line, .. } | Field::String { line, .. } => {
+                *line
             }
         }
     }
@@ -262,12 +277,12 @@ async fn main_site(_: Request<()>) -> Response {
                 h1 (class="title is-1") { : "Const Tweaker Web Interface" }
             }
             // All the widgets
-            : widgets();
+            : render_widgets();
             // The error message
             div (class="container") {
                 div (class="notification is-danger") {
                     span(id="status") { }
-                }
+        }
             }
         }
         script { : Raw(include_str!("send.js")) }
@@ -279,26 +294,44 @@ async fn main_site(_: Request<()>) -> Response {
 }
 
 /// Render all widgets.
-fn widgets() -> impl Render {
+fn render_widgets() -> impl Render {
     owned_html! {
         // All modules go in their own panels
         @for module in modules().into_iter() {
             section (class="section") {
                 div (class="container box") {
                     h3 (class="title is-3") { : format!("Module: \"{}\"", module) }
-
-                    // All widgets go into their own column box
-                    @for ref_multi in DATA.iter().filter(|kv| kv.value().module_path() == module) {
-                        : widget(ref_multi.key(), ref_multi.value())
-                    }
+                    : render_module(&module)
                 }
             }
         }
     }
 }
 
+/// Render a module of widgets.
+fn render_module<'a>(module: &'a str) -> impl Render + 'a {
+    let mut data = DATA
+        .iter()
+        .filter(|kv| kv.value().module_path() == module)
+        .collect::<Vec<_>>();
+
+    data.sort_by(|a, b| {
+        a.value()
+            .line_number()
+            .partial_cmp(&b.value().line_number())
+            .unwrap_or(Ordering::Equal)
+    });
+
+    owned_html! {
+        // All widgets go into their own column box
+        @for ref_multi in data.iter() {
+            : render_widget(ref_multi.key(), ref_multi.value())
+        }
+    }
+}
+
 /// Render a single widget.
-fn widget<'a>(key: &'a str, field: &'a Field) -> impl Render + 'a {
+fn render_widget<'a>(key: &'a str, field: &'a Field) -> impl Render + 'a {
     owned_html! {
         div (class="columns") {
             div (class="column is-narrow") {
