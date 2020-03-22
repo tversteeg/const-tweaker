@@ -42,6 +42,18 @@ fn field_init(
                 let step = metadata.step.unwrap_or(0.1);
 
                 match &*(type_ident.to_string()) {
+                    "f32" => Ok(quote! {
+                        const_tweaker::Field::F32 {
+                            value: #default_value as f32,
+                            min: #min,
+                            max: #max,
+                            step: #step,
+
+                            module: module_path!().to_string(),
+                            file: file!().to_string(),
+                            line: line!(),
+                        }
+                    }),
                     "f64" => Ok(quote! {
                         const_tweaker::Field::F64 {
                             value: #default_value,
@@ -87,6 +99,7 @@ fn field_name(ty: &Type) -> Result<TokenStream2, TokenStream> {
     if let Type::Path(type_path) = &*ty {
         match type_path.path.get_ident() {
             Some(type_ident) => match &*(type_ident.to_string()) {
+                "f32" => Ok(quote! { const_tweaker::Field::F32 }),
                 "f64" => Ok(quote! { const_tweaker::Field::F64 }),
                 "bool" => Ok(quote! { const_tweaker::Field::Bool }),
                 "str" => Ok(quote! { const_tweaker::Field::String }),
@@ -104,7 +117,7 @@ fn mismatching_type_error<T>(ty: &Type) -> Result<T, TokenStream> {
     Err(TokenStream::from(
         Error::new(
             ty.span(),
-            "expected bool, &str or f64, other types are not supported in const_tweaker (yet)",
+            "expected bool, &str, f32 or f64, other types are not supported in const_tweaker (yet)",
         )
         .to_compile_error(),
     ))

@@ -60,8 +60,8 @@ use anyhow::Result;
 use async_std::task;
 use dashmap::DashMap;
 use horrorshow::{html, owned_html, Raw, Render};
-use serde::Deserialize;
-use std::{cmp::Ordering, thread};
+use serde::{de::DeserializeOwned, Deserialize};
+use std::{cmp::Ordering, string::ToString, thread};
 use tide::{Request, Response};
 
 pub use const_tweaker_attribute::tweak;
@@ -70,6 +70,22 @@ pub use const_tweaker_attribute::tweak;
 #[doc(hidden)]
 #[derive(Debug)]
 pub enum Field {
+    F32 {
+        value: f32,
+        /// Minimum value of slider.
+        min: f64,
+        /// Maximum value of slider.
+        max: f64,
+        /// Step increase of slider.
+        step: f64,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
     F64 {
         value: f64,
         /// Minimum value of slider.
@@ -109,106 +125,11 @@ pub enum Field {
 }
 
 impl Field {
-    /// Set a f64 value when the field matches the proper variant.
-    pub fn set_f64(&mut self, new_value: f64) -> &Self {
-        match self {
-            Field::F64 { ref mut value, .. } => {
-                *value = new_value;
-                self
-            }
-            _ => panic!("Unexpected type, please report an issue"),
-        }
-    }
-
-    /// Set a bool value when the field matches the proper variant.
-    pub fn set_bool(&mut self, new_value: bool) -> &Self {
-        match self {
-            Field::Bool { ref mut value, .. } => {
-                *value = new_value;
-                self
-            }
-            _ => panic!("Unexpected type, please report an issue"),
-        }
-    }
-
-    /// Set a string value when the field matches the proper variant.
-    pub fn set_string(&mut self, new_value: &str) -> &Self {
-        match self {
-            Field::String { ref mut value, .. } => {
-                *value = new_value.to_string();
-                self
-            }
-            _ => panic!("Unexpected type, please report an issue"),
-        }
-    }
-
-    /// Create a HTML widget from this field with it's metadata.
-    pub fn to_html_widget(&self, key: &str) -> String {
-        match self {
-            Field::F64 {
-                value,
-                min,
-                max,
-                step,
-                ..
-            } => {
-                (owned_html! {
-                    div (class="column") {
-                        input (type="range",
-                            id=key,
-                            min=min,
-                            max=max,
-                            step=step,
-                            defaultValue=value,
-                            style="width: 100%",
-                            // The value is a string, convert it to a number so it can be properly
-                            // deserialized by serde
-                            oninput=send(key, "Number(this.value)", "f64"))
-                        { }
-                    }
-                    div (class="column is-narrow") {
-                        span (id=format!("{}_label", key), class="is-small")
-                        { : value }
-                    }
-                })
-                .to_string()
-            }
-            Field::Bool { value, .. } => (owned_html! {
-                div (class="column") {
-                    input (type="checkbox",
-                        id=key,
-                        value=value.to_string(),
-                        onclick=send(key, "this.checked", "bool"))
-                    { }
-                }
-                div (class="column is-narrow") {
-                    span (id=format!("{}_label", key))
-                    { : value.to_string() }
-                }
-            })
-            .to_string(),
-            Field::String { value, .. } => (owned_html! {
-                div (class="column") {
-                    input (type="text",
-                        id=key,
-                        value=value,
-                        style="width: 100%",
-                        onchange=send(key, "this.value", "string"))
-                    { }
-                }
-                div (class="column is-narrow") {
-                    span (id=format!("{}_label", key))
-                    { : value.to_string() }
-                }
-            })
-            .to_string(),
-        }
-    }
-
     /// The full module path where the constant lives.
     pub fn module_path(&self) -> &str {
         match self {
-            Field::F64 { module, .. }
+            Field::F32 { module, .. }
+            | Field::F64 { module, .. }
             | Field::Bool { module, .. }
             | Field::String { module, .. } => &*module,
         }
@@ -217,7 +138,8 @@ impl Field {
     /// The file with line number.
     pub fn file(&self) -> String {
         match self {
-            Field::F64 { file, line, .. }
+            Field::F32 { file, line, .. }
+            | Field::F64 { file, line, .. }
             | Field::Bool { file, line, .. }
             | Field::String { file, line, .. } => format!("{}:{}", file, line),
         }
@@ -226,8 +148,96 @@ impl Field {
     /// Just the line number in the file.
     pub fn line_number(&self) -> u32 {
         match self {
-            Field::F64 { line, .. } | Field::Bool { line, .. } | Field::String { line, .. } => {
-                *line
+            Field::F32 { line, .. }
+            | Field::F64 { line, .. }
+            | Field::Bool { line, .. }
+            | Field::String { line, .. } => *line,
+        }
+    }
+
+    /// Create a HTML widget from this field with it's metadata.
+    pub fn to_html_widget(&self, key: &str) -> String {
+        match self {
+            Field::F32 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_float(key, (*value).into(), *min, *max, *step, "f32").to_string(),
+            Field::F64 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_float(key, *value, *min, *max, *step, "f64").to_string(),
+            Field::Bool { value, .. } => Field::render_bool(key, *value).to_string(),
+            Field::String { value, .. } => Field::render_string(key, value).to_string(),
+        }
+    }
+
+    /// Render the float widget for both float types.
+    fn render_float<'a>(
+        key: &'a str,
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+        http_path: &'a str,
+    ) -> impl Render + ToString + 'a {
+        owned_html! {
+            div (class="column") {
+                input (type="range",
+                    id=key,
+                    min=min,
+                    max=max,
+                    step=step,
+                    defaultValue=value,
+                    style="width: 100%",
+                    // The value is a string, convert it to a number so it can be properly
+                    // deserialized by serde
+                    oninput=send(key, "Number(this.value)", http_path))
+                { }
+            }
+            div (class="column is-narrow") {
+                span (id=format!("{}_label", key), class="is-small")
+                { : value }
+            }
+        }
+    }
+
+    /// Render the bool widget.
+    fn render_bool<'a>(key: &'a str, value: bool) -> impl Render + ToString + 'a {
+        owned_html! {
+            div (class="column") {
+                input (type="checkbox",
+                    id=key,
+                    value=value.to_string(),
+                    onclick=send(key, "this.checked", "bool"))
+                { }
+            }
+            div (class="column is-narrow") {
+                span (id=format!("{}_label", key))
+                { : value.to_string() }
+            }
+        }
+    }
+
+    /// Render the string widget.
+    fn render_string<'a>(key: &'a str, value: &'a str) -> impl Render + ToString + 'a {
+        owned_html! {
+            div (class="column") {
+                input (type="text",
+                    id=key,
+                    value=value,
+                    style="width: 100%",
+                    onchange=send(key, "this.value", "string"))
+                { }
+            }
+            div (class="column is-narrow") {
+                span (id=format!("{}_label", key))
+                { : value.to_string() }
             }
         }
     }
@@ -255,9 +265,11 @@ pub fn run() -> Result<()> {
         task::block_on(async {
             let mut app = tide::new();
             app.at("/").get(main_site);
-            app.at("/set/f64").post(handle_set_f64);
-            app.at("/set/bool").post(handle_set_bool);
-            app.at("/set/string").post(handle_set_string);
+            app.at("/set/f32").post(|r| handle_set_value(r, set_f32));
+            app.at("/set/f64").post(|r| handle_set_value(r, set_f64));
+            app.at("/set/bool").post(|r| handle_set_value(r, set_bool));
+            app.at("/set/string")
+                .post(|r| handle_set_value(r, set_string));
             app.listen("127.0.0.1:9938").await
         })
         .expect("Running web server failed");
@@ -357,32 +369,61 @@ fn send(key: &str, look_for: &str, data_type: &str) -> String {
     )
 }
 
-// Handle setting of values
-async fn handle_set_f64(mut request: Request<()>) -> Response {
-    let post_data: PostData<f64> = request.body_json().await.expect("Could not decode JSON");
-    DATA.get_mut(&*post_data.key)
-        .expect("Could not get item from map")
-        .set_f64(post_data.value);
+/// Handle setting of values.
+async fn handle_set_value<T, F>(mut request: Request<()>, set_value: F) -> Response
+where
+    T: DeserializeOwned,
+    F: Fn(&mut Field, T),
+{
+    let post_data: PostData<T> = request.body_json().await.expect("Could not decode JSON");
+    set_value(
+        &mut DATA
+            .get_mut(&*post_data.key)
+            .expect("Could not get item from map"),
+        post_data.value,
+    );
 
     Response::new(200)
 }
 
-async fn handle_set_bool(mut request: Request<()>) -> Response {
-    let post_data: PostData<bool> = request.body_json().await.expect("Could not decode JSON");
-    DATA.get_mut(&*post_data.key)
-        .expect("Could not get item from map")
-        .set_bool(post_data.value);
-
-    Response::new(200)
+/// Set a f32 value when the field matches the proper variant.
+fn set_f32(field: &mut Field, new_value: f32) {
+    match field {
+        Field::F32 { ref mut value, .. } => {
+            *value = new_value;
+        }
+        _ => panic!("Unexpected type, please report an issue"),
+    }
 }
 
-async fn handle_set_string(mut request: Request<()>) -> Response {
-    let post_data: PostData<String> = request.body_json().await.expect("Could not decode JSON");
-    DATA.get_mut(&*post_data.key)
-        .expect("Could not get item from map")
-        .set_string(&post_data.value);
+/// Set a f64 value when the field matches the proper variant.
+fn set_f64(field: &mut Field, new_value: f64) {
+    match field {
+        Field::F64 { ref mut value, .. } => {
+            *value = new_value;
+        }
+        _ => panic!("Unexpected type, please report an issue"),
+    }
+}
 
-    Response::new(200)
+/// Set a bool value when the field matches the proper variant.
+fn set_bool(field: &mut Field, new_value: bool) {
+    match field {
+        Field::Bool { ref mut value, .. } => {
+            *value = new_value;
+        }
+        _ => panic!("Unexpected type, please report an issue"),
+    }
+}
+
+/// Set a string value when the field matches the proper variant.
+fn set_string(field: &mut Field, new_value: String) {
+    match field {
+        Field::String { ref mut value, .. } => {
+            *value = new_value;
+        }
+        _ => panic!("Unexpected type, please report an issue"),
+    }
 }
 
 /// Get a list of all modules.
