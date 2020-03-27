@@ -64,7 +64,7 @@ use async_std::task;
 use dashmap::DashMap;
 use horrorshow::{html, owned_html, Raw, Render};
 use serde::{de::DeserializeOwned, Deserialize};
-use std::{cmp::Ordering, string::ToString, sync::Mutex, thread};
+use std::{cmp::Ordering, fmt::Display, string::ToString, sync::Mutex, thread};
 use tide::{Request, Response};
 
 pub use const_tweaker_attribute::tweak;
@@ -76,11 +76,11 @@ pub enum Field {
     F32 {
         value: f32,
         /// Minimum value of slider.
-        min: f64,
+        min: f32,
         /// Maximum value of slider.
-        max: f64,
+        max: f32,
         /// Step increase of slider.
-        step: f64,
+        step: f32,
 
         /// Rust module location.
         module: String,
@@ -97,6 +97,150 @@ pub enum Field {
         max: f64,
         /// Step increase of slider.
         step: f64,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    I8 {
+        value: i8,
+        /// Minimum value of slider.
+        min: i8,
+        /// Maximum value of slider.
+        max: i8,
+        /// Step increase of slider.
+        step: i8,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    U8 {
+        value: u8,
+        /// Minimum value of slider.
+        min: u8,
+        /// Maximum value of slider.
+        max: u8,
+        /// Step increase of slider.
+        step: u8,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    I16 {
+        value: i16,
+        /// Minimum value of slider.
+        min: i16,
+        /// Maximum value of slider.
+        max: i16,
+        /// Step increase of slider.
+        step: i16,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    U16 {
+        value: u16,
+        /// Minimum value of slider.
+        min: u16,
+        /// Maximum value of slider.
+        max: u16,
+        /// Step increase of slider.
+        step: u16,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    I32 {
+        value: i32,
+        /// Minimum value of slider.
+        min: i32,
+        /// Maximum value of slider.
+        max: i32,
+        /// Step increase of slider.
+        step: i32,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    U32 {
+        value: u32,
+        /// Minimum value of slider.
+        min: u32,
+        /// Maximum value of slider.
+        max: u32,
+        /// Step increase of slider.
+        step: u32,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    I64 {
+        value: i64,
+        /// Minimum value of slider.
+        min: i64,
+        /// Maximum value of slider.
+        max: i64,
+        /// Step increase of slider.
+        step: i64,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    U64 {
+        value: u64,
+        /// Minimum value of slider.
+        min: u64,
+        /// Maximum value of slider.
+        max: u64,
+        /// Step increase of slider.
+        step: u64,
+
+        /// Rust module location.
+        module: String,
+        /// Rust file location.
+        file: String,
+        /// Rust line number in file.
+        line: u32,
+    },
+    Usize {
+        value: usize,
+        /// Minimum value of slider.
+        min: usize,
+        /// Maximum value of slider.
+        max: usize,
+        /// Step increase of slider.
+        step: usize,
 
         /// Rust module location.
         module: String,
@@ -133,6 +277,15 @@ impl Field {
         match self {
             Field::F32 { module, .. }
             | Field::F64 { module, .. }
+            | Field::I8 { module, .. }
+            | Field::U8 { module, .. }
+            | Field::I16 { module, .. }
+            | Field::U16 { module, .. }
+            | Field::I32 { module, .. }
+            | Field::U32 { module, .. }
+            | Field::I64 { module, .. }
+            | Field::U64 { module, .. }
+            | Field::Usize { module, .. }
             | Field::Bool { module, .. }
             | Field::String { module, .. } => &*module,
         }
@@ -143,6 +296,15 @@ impl Field {
         match self {
             Field::F32 { file, line, .. }
             | Field::F64 { file, line, .. }
+            | Field::I8 { file, line, .. }
+            | Field::U8 { file, line, .. }
+            | Field::I16 { file, line, .. }
+            | Field::U16 { file, line, .. }
+            | Field::I32 { file, line, .. }
+            | Field::U32 { file, line, .. }
+            | Field::I64 { file, line, .. }
+            | Field::U64 { file, line, .. }
+            | Field::Usize { file, line, .. }
             | Field::Bool { file, line, .. }
             | Field::String { file, line, .. } => format!("{}:{}", file, line),
         }
@@ -153,6 +315,15 @@ impl Field {
         match self {
             Field::F32 { line, .. }
             | Field::F64 { line, .. }
+            | Field::I8 { line, .. }
+            | Field::U8 { line, .. }
+            | Field::I16 { line, .. }
+            | Field::U16 { line, .. }
+            | Field::I32 { line, .. }
+            | Field::U32 { line, .. }
+            | Field::I64 { line, .. }
+            | Field::U64 { line, .. }
+            | Field::Usize { line, .. }
             | Field::Bool { line, .. }
             | Field::String { line, .. } => *line,
         }
@@ -167,36 +338,102 @@ impl Field {
                 max,
                 step,
                 ..
-            } => Field::render_float(key, (*value).into(), *min, *max, *step, "f32").to_string(),
+            } => Field::render_slider(key, *value, *min, *max, *step, "f32").to_string(),
             Field::F64 {
                 value,
                 min,
                 max,
                 step,
                 ..
-            } => Field::render_float(key, *value, *min, *max, *step, "f64").to_string(),
+            } => Field::render_slider(key, *value, *min, *max, *step, "f64").to_string(),
+            Field::I8 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "i8").to_string(),
+            Field::U8 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "u8").to_string(),
+            Field::I16 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "i16").to_string(),
+            Field::U16 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "u16").to_string(),
+            Field::I32 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "i32").to_string(),
+            Field::U32 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "u32").to_string(),
+            Field::I64 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "i64").to_string(),
+            Field::U64 {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "u64").to_string(),
+            Field::Usize {
+                value,
+                min,
+                max,
+                step,
+                ..
+            } => Field::render_slider(key, *value, *min, *max, *step, "usize").to_string(),
             Field::Bool { value, .. } => Field::render_bool(key, *value).to_string(),
             Field::String { value, .. } => Field::render_string(key, value).to_string(),
         }
     }
 
-    /// Render the float widget for both float types.
-    fn render_float<'a>(
+    /// Render a slider widget for the number types.
+    fn render_slider<'a, T>(
         key: &'a str,
-        value: f64,
-        min: f64,
-        max: f64,
-        step: f64,
+        value: T,
+        min: T,
+        max: T,
+        step: T,
         http_path: &'a str,
-    ) -> impl Render + ToString + 'a {
+    ) -> impl Render + ToString + 'a
+    where
+        T: Display + 'a,
+    {
         owned_html! {
             div (class="column") {
                 input (type="range",
-                    id=key,
-                    min=min,
-                    max=max,
-                    step=step,
-                    defaultValue=value,
+                    id=key.to_string(),
+                    min=min.to_string(),
+                    max=max.to_string(),
+                    step=step.to_string(),
+                    defaultValue=value.to_string(),
                     style="width: 100%",
                     // The value is a string, convert it to a number so it can be properly
                     // deserialized by serde
@@ -205,7 +442,7 @@ impl Field {
             }
             div (class="column is-narrow") {
                 span (id=format!("{}_label", key), class="is-small")
-                { : value }
+                { : value.to_string() }
             }
         }
     }

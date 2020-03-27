@@ -1,6 +1,7 @@
 use darling::FromMeta;
 use proc_macro::TokenStream;
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
+use std::{i16, i32, i64, i8, u16, u32, u64, u8, usize};
 use syn::{
     parse_macro_input, spanned::Spanned, AttributeArgs, Error, Expr, ItemConst, Type,
     Type::Reference,
@@ -10,16 +11,19 @@ type TokenStream2 = proc_macro2::TokenStream;
 
 /// The metadata for rendering the web GUI.
 #[derive(Debug, FromMeta)]
-struct Metadata {
+struct Metadata<T>
+where
+    T: FromMeta,
+{
     #[darling(default)]
-    min: Option<f64>,
+    min: Option<T>,
     #[darling(default)]
-    max: Option<f64>,
+    max: Option<T>,
     #[darling(default)]
-    step: Option<f64>,
+    step: Option<T>,
 }
 
-impl Metadata {
+impl<T: FromMeta> Metadata<T> {
     pub fn from_attributes(args: AttributeArgs) -> Result<Self, TokenStream> {
         match Metadata::from_list(&args) {
             Ok(v) => Ok(v),
@@ -29,82 +33,204 @@ impl Metadata {
 }
 
 /// Convert a given type to a const_tweaker Field with metadata.
-fn field_init(
+fn field_init<T>(
+    field_type: &str,
     ty: &Type,
-    metadata: Metadata,
+    metadata: Metadata<T>,
     default_value: Expr,
-) -> Result<TokenStream2, TokenStream> {
-    if let Type::Path(type_path) = &*ty {
-        match type_path.path.get_ident() {
-            Some(type_ident) => {
-                let min = metadata.min.unwrap_or(-1.0);
-                let max = metadata.max.unwrap_or(1.0);
-                let step = metadata.step.unwrap_or(0.1);
+    default_min: T,
+    default_max: T,
+    default_step: T,
+) -> Result<TokenStream2, TokenStream>
+where
+    T: FromMeta + ToTokens,
+{
+    let min = metadata.min.unwrap_or(default_min);
+    let max = metadata.max.unwrap_or(default_max);
+    let step = metadata.step.unwrap_or(default_step);
 
-                match &*(type_ident.to_string()) {
-                    "f32" => Ok(quote! {
-                        const_tweaker::Field::F32 {
-                            value: #default_value as f32,
-                            min: #min,
-                            max: #max,
-                            step: #step,
+    Ok(match field_type {
+        "f32" => quote! {
+            const_tweaker::Field::F32 {
+                value: #default_value as f32,
+                min: #min,
+                max: #max,
+                step: #step,
 
-                            module: module_path!().to_string(),
-                            file: file!().to_string(),
-                            line: line!(),
-                        }
-                    }),
-                    "f64" => Ok(quote! {
-                        const_tweaker::Field::F64 {
-                            value: #default_value,
-                            min: #min,
-                            max: #max,
-                            step: #step,
-
-                            module: module_path!().to_string(),
-                            file: file!().to_string(),
-                            line: line!(),
-                        }
-                    }),
-                    "bool" => Ok(quote! {
-                        const_tweaker::Field::Bool {
-                            value: #default_value,
-
-                            module: module_path!().to_string(),
-                            file: file!().to_string(),
-                            line: line!(),
-                        }
-                    }),
-                    "str" => Ok(quote! {
-                        const_tweaker::Field::String {
-                            value: #default_value.to_string(),
-
-                            module: module_path!().to_string(),
-                            file: file!().to_string(),
-                            line: line!(),
-                        }
-                    }),
-                    _ => mismatching_type_error(&ty),
-                }
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
             }
-            None => mismatching_type_error(&ty),
+        },
+        "f64" => quote! {
+            const_tweaker::Field::F64 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "i8" => quote! {
+            const_tweaker::Field::I8 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "u8" => quote! {
+            const_tweaker::Field::U8 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "i16" => quote! {
+            const_tweaker::Field::I16 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "u16" => quote! {
+            const_tweaker::Field::U16 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "i32" => quote! {
+            const_tweaker::Field::I32 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "u32" => quote! {
+            const_tweaker::Field::U32 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "i64" => quote! {
+            const_tweaker::Field::I64 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "u64" => quote! {
+            const_tweaker::Field::U64 {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "usize" => quote! {
+            const_tweaker::Field::Usize {
+                value: #default_value,
+                min: #min,
+                max: #max,
+                step: #step,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "bool" => quote! {
+            const_tweaker::Field::Bool {
+                value: #default_value,
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        "str" => quote! {
+            const_tweaker::Field::String {
+                value: #default_value.to_string(),
+
+                module: module_path!().to_string(),
+                file: file!().to_string(),
+                line: line!(),
+            }
+        },
+        _ => {
+            return mismatching_type_error(&ty);
         }
-    } else {
-        mismatching_type_error(&ty)
-    }
+    })
 }
 
 /// Convert a given type to a const_tweaker Field type.
-fn field_name(ty: &Type) -> Result<TokenStream2, TokenStream> {
+fn field_name(field_type: &str, ty: &Type) -> Result<TokenStream2, TokenStream> {
+    match field_type {
+        "f32" => Ok(quote! { const_tweaker::Field::F32 }),
+        "f64" => Ok(quote! { const_tweaker::Field::F64 }),
+        "i8" => Ok(quote! { const_tweaker::Field::I8 }),
+        "u8" => Ok(quote! { const_tweaker::Field::U8 }),
+        "i16" => Ok(quote! { const_tweaker::Field::I16 }),
+        "u16" => Ok(quote! { const_tweaker::Field::U16 }),
+        "i32" => Ok(quote! { const_tweaker::Field::I32 }),
+        "u32" => Ok(quote! { const_tweaker::Field::U32 }),
+        "i64" => Ok(quote! { const_tweaker::Field::I64 }),
+        "u64" => Ok(quote! { const_tweaker::Field::U64 }),
+        "usize" => Ok(quote! { const_tweaker::Field::Usize }),
+        "bool" => Ok(quote! { const_tweaker::Field::Bool }),
+        "str" => Ok(quote! { const_tweaker::Field::String }),
+        _ => mismatching_type_error(&ty),
+    }
+}
+
+/// Get the field type as a string.
+fn field_type(ty: &Type) -> Result<String, TokenStream> {
     if let Type::Path(type_path) = &*ty {
         match type_path.path.get_ident() {
-            Some(type_ident) => match &*(type_ident.to_string()) {
-                "f32" => Ok(quote! { const_tweaker::Field::F32 }),
-                "f64" => Ok(quote! { const_tweaker::Field::F64 }),
-                "bool" => Ok(quote! { const_tweaker::Field::Bool }),
-                "str" => Ok(quote! { const_tweaker::Field::String }),
-                _ => mismatching_type_error(&ty),
-            },
+            Some(type_ident) => Ok(type_ident.to_string()),
             None => mismatching_type_error(&ty),
         }
     } else {
@@ -117,7 +243,7 @@ fn mismatching_type_error<T>(ty: &Type) -> Result<T, TokenStream> {
     Err(TokenStream::from(
         Error::new(
             ty.span(),
-            "expected bool, &str, f32 or f64, other types are not supported in const_tweaker (yet)",
+            "expected bool, &str, f32, f64, i8, u8, i16, u16, i32, u32, i64, u64, i128, u128 or usize, other types are not supported in const_tweaker (yet)",
         )
         .to_compile_error(),
     ))
@@ -132,8 +258,130 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
     } else {
         input.ty
     };
-    let field_init = field_init(&*ty, Metadata::from_attributes(args)?, *input.expr)?;
-    let field_name = field_name(&*ty)?;
+    let field_type = field_type(&*ty)?;
+    let field_name = field_name(&field_type, &*ty)?;
+    let field_init = match &*field_type {
+        "f32" => field_init::<f32>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            0.0,
+            1.0,
+            0.001,
+        )?,
+        "f64" => field_init::<f64>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            0.0,
+            1.0,
+            0.001,
+        )?,
+        "i8" => field_init::<i8>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            i8::MIN,
+            i8::MAX,
+            1,
+        )?,
+        "u8" => field_init::<u8>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            u8::MIN,
+            u8::MAX,
+            1,
+        )?,
+        "i16" => field_init::<i16>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            i16::MIN,
+            i16::MAX,
+            1,
+        )?,
+        "u16" => field_init::<u16>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            u16::MIN,
+            u16::MAX,
+            1,
+        )?,
+        "i32" => field_init::<i32>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            i32::MIN,
+            i32::MAX,
+            1,
+        )?,
+        "u32" => field_init::<u32>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            u32::MIN,
+            u32::MAX,
+            1,
+        )?,
+        "i64" => field_init::<i64>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            i64::MIN,
+            i64::MAX,
+            1,
+        )?,
+        "u64" => field_init::<u64>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            u64::MIN,
+            u64::MAX,
+            1,
+        )?,
+        "usize" => field_init::<usize>(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            usize::MIN,
+            usize::MAX,
+            1,
+        )?,
+        "bool" => field_init(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            0,
+            0,
+            0,
+        )?,
+        "str" => field_init(
+            &field_type,
+            &*ty,
+            Metadata::from_attributes(args)?,
+            *input.expr,
+            0,
+            0,
+            0,
+        )?,
+        _ => {
+            return mismatching_type_error(&ty);
+        }
+    };
 
     let result = quote! {
         #[allow(non_camel_case_types)]

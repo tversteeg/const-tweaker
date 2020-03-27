@@ -17,6 +17,26 @@ const F64_VALUE_CUSTOM: f64 = 0.0;
 #[const_tweaker::tweak]
 const F64_VALUE_DEFAULT: f64 = 0.0;
 
+// Default values for integer sliders
+#[const_tweaker::tweak]
+const I8_VALUE_DEFAULT: i8 = 0;
+#[const_tweaker::tweak]
+const U8_VALUE_DEFAULT: u8 = 0;
+#[const_tweaker::tweak]
+const I16_VALUE_DEFAULT: i16 = 0;
+#[const_tweaker::tweak]
+const U16_VALUE_DEFAULT: u16 = 0;
+#[const_tweaker::tweak]
+const I32_VALUE_DEFAULT: i32 = 0;
+#[const_tweaker::tweak]
+const U32_VALUE_DEFAULT: u32 = 0;
+#[const_tweaker::tweak]
+const I64_VALUE_DEFAULT: i64 = 0;
+#[const_tweaker::tweak]
+const U64_VALUE_DEFAULT: u64 = 0;
+#[const_tweaker::tweak]
+const USIZE_VALUE_DEFAULT: usize = 0;
+
 // Checkbox
 #[const_tweaker::tweak]
 const BOOL_VALUE: bool = false;
@@ -43,6 +63,15 @@ fn main() -> Result<()> {
             F32_VALUE_DEFAULT,
             F64_VALUE_CUSTOM,
             F64_VALUE_DEFAULT,
+            I8_VALUE_DEFAULT,
+            U8_VALUE_DEFAULT,
+            I16_VALUE_DEFAULT,
+            U16_VALUE_DEFAULT,
+            I32_VALUE_DEFAULT,
+            U32_VALUE_DEFAULT,
+            I64_VALUE_DEFAULT,
+            U64_VALUE_DEFAULT,
+            USIZE_VALUE_DEFAULT,
             BOOL_VALUE,
             STRING_VALUE
         );
