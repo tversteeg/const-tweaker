@@ -61,7 +61,7 @@ use async_std::task;
 use dashmap::DashMap;
 use horrorshow::{html, owned_html, Raw, Render};
 use serde::{de::DeserializeOwned, Deserialize};
-use std::{cmp::Ordering, string::ToString, thread};
+use std::{cmp::Ordering, string::ToString, sync::Mutex, thread};
 use tide::{Request, Response};
 
 pub use const_tweaker_attribute::tweak;
@@ -254,6 +254,8 @@ lazy_static::lazy_static! {
     /// The list of fields with their data.
     #[doc(hidden)]
     pub static ref DATA: DashMap<&'static str, Field> = DashMap::new();
+    /// The last known size of the DATA map, used to detect whether the page should refresh.
+    static ref LAST_MAP_SIZE: Mutex<usize> = Mutex::new(0);
 }
 
 /// Launch the `const` tweaker web service.
@@ -264,7 +266,12 @@ pub fn run() -> Result<()> {
     thread::spawn(|| {
         task::block_on(async {
             let mut app = tide::new();
+            // The main site
             app.at("/").get(main_site);
+            // Whether the page should be refreshed or not
+            app.at("/should_refresh").get(should_refresh);
+
+            // Setting the data
             app.at("/set/f32").post(|r| handle_set_value(r, set_f32));
             app.at("/set/f64").post(|r| handle_set_value(r, set_f64));
             app.at("/set/bool").post(|r| handle_set_value(r, set_bool));
@@ -280,6 +287,10 @@ pub fn run() -> Result<()> {
 
 /// Build the actual site.
 async fn main_site(_: Request<()>) -> Response {
+    // Set LAST_MAP_SIZE to it's initial value
+    let mut last_map_size = LAST_MAP_SIZE.lock().unwrap();
+    *last_map_size = DATA.len();
+
     let body = html! {
         style { : include_str!("bulma.css") }
         style { : "* { font-family: sans-serif}" }
@@ -367,6 +378,21 @@ fn send(key: &str, look_for: &str, data_type: &str) -> String {
         look_for,
         data_type
     )
+}
+
+/// Whether the webpage should refresh itself or not.
+async fn should_refresh(_request: Request<()>) -> Response {
+    let mut last_map_size = LAST_MAP_SIZE.lock().unwrap();
+
+    if *last_map_size == DATA.len() {
+        // Don't need to do anything, just send an empty response
+        Response::new(200)
+    } else {
+        // There is a size mismatch of the map, reload the page
+        *last_map_size = DATA.len();
+
+        Response::new(200).body_string(format!("refresh"))
+    }
 }
 
 /// Handle setting of values.

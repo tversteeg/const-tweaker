@@ -25,10 +25,16 @@ const BOOL_VALUE: bool = false;
 #[const_tweaker::tweak]
 const STRING_VALUE: &str = "Hello";
 
+// Value that will be accessed after 10 seconds, which will trigger a page refresh
+#[const_tweaker::tweak]
+const DELAYED_VALUE: &str = "Delayed";
+
 fn main() -> Result<()> {
     // Run the tweaker server only when in debug mode
     #[cfg(debug_assertions)]
     const_tweaker::run()?;
+
+    let mut countdown = 10i32;
 
     // Print the constant value times every second
     loop {
@@ -40,6 +46,12 @@ fn main() -> Result<()> {
             BOOL_VALUE,
             STRING_VALUE
         );
+
+        // Wait for 10 seconds before printing the delayed value once
+        countdown -= 1;
+        if countdown == 0 {
+            dbg!(DELAYED_VALUE);
+        }
 
         thread::sleep(Duration::from_secs(1));
     }

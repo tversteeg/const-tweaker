@@ -1,4 +1,4 @@
-async function send(source, value, data_type) {
+function send(source, value, data_type) {
 	// Change the label
 	var label_element = document.getElementById(source + '_label');
 	if (label_element) {
@@ -16,3 +16,21 @@ async function send(source, value, data_type) {
 		document.getElementById('status').textContent = 'HTTP Error: ' + err;
 	});
 }
+
+function poll() {
+	// Make the request
+	fetch('/should_refresh')
+		.then(response => response.text())
+		.then(body => {
+			if (body == "refresh") {
+				console.log("Reloading page");
+				location.reload();
+			}
+		})
+		.catch(err => {
+			document.getElementById('status').textContent = 'HTTP Error: ' + err;
+		});
+}
+
+// Poll every second
+setInterval(poll, 1000);
