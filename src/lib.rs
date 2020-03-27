@@ -56,6 +56,9 @@
 //! const DEFAULT_VALUE: &str = "Hi";
 //! ```
 
+// Ignore the lazy_static warning about the mutex
+#![allow(clippy::mutex_atomic)]
+
 use anyhow::Result;
 use async_std::task;
 use dashmap::DashMap;
@@ -391,7 +394,7 @@ async fn should_refresh(_request: Request<()>) -> Response {
         // There is a size mismatch of the map, reload the page
         *last_map_size = DATA.len();
 
-        Response::new(200).body_string(format!("refresh"))
+        Response::new(200).body_string("refresh".to_string())
     }
 }
 
