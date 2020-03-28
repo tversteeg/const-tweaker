@@ -383,6 +383,24 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
         }
     };
 
+    let type_impls = if field_type == "str" {
+        quote! {
+            impl std::convert::From<#name> for &#ty {
+                fn from(original: #name) -> &'static #ty {
+                    original.get()
+                }
+            }
+        }
+    } else {
+        quote! {
+            impl std::convert::From<#name> for #ty {
+                fn from(original: #name) -> #ty {
+                    *original.get()
+                }
+            }
+        }
+    };
+
     let result = quote! {
         #[allow(non_camel_case_types)]
         #[doc(hidden)]
@@ -430,6 +448,8 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
                 write!(f, "{:?}", self.get())
             }
         }
+
+        #type_impls
 
         // The setting of the field in the map is only done once
         static #init_name: std::sync::Once = std::sync::Once::new();
