@@ -536,8 +536,12 @@ async fn main_site(_: Request<()>) -> Response {
         style { : "* { font-family: sans-serif}" }
         body {
             // Title
-            div (class="container box") {
-                h1 (class="title is-1") { : "Const Tweaker Web Interface" }
+            section (class="hero is-primary") {
+                div (class="hero-body") {
+                    div (class="container") {
+                        h1 (class="title is-1") { : "Const Tweaker Web Interface" }
+                    }
+                }
             }
             // All the widgets
             : render_widgets();
@@ -545,7 +549,7 @@ async fn main_site(_: Request<()>) -> Response {
             div (class="container") {
                 div (class="notification is-danger") {
                     span(id="status") { }
-        }
+                }
             }
         }
         script { : Raw(include_str!("send.js")) }
@@ -565,6 +569,21 @@ fn render_widgets() -> impl Render {
                 div (class="container box") {
                     h3 (class="title is-3") { : format!("Module: \"{}\"", module) }
                     : render_module(&module)
+                }
+
+                // The textbox to copy the output from
+                div (class="container box") {
+                    h4 (class="title is-4") { : "Changes" }
+                    div (class="columns") {
+                        div (class="column") {
+                            textarea (class="textarea", id=format!("{}_output", module), readonly, placeholder="No changes")
+                        }
+                        div (class="column is-narrow control") {
+                            button (class="button is-link", onclick=format!("copy_text(\"{}\")", module)) {
+                                : "Copy"
+                            }
+                        }
+                    }
                 }
             }
         }
