@@ -15,11 +15,11 @@ categories = ["game-development", "config", "development-tools", "rust-patterns"
 members = ["macro"]
 
 [dependencies]
-anyhow = "1.0.27"
+anyhow = "1.0.28"
 async-std = "1.5.0"
 const-tweaker-attribute = { path = "./macro", version = "0.4.0" }
-dashmap = "3.9.0"
+dashmap = "3.11.0"
 horrorshow = "0.8.3"
 lazy_static = "1.4.0"
-serde = { version = "1.0.105", features = ["derive"] }
+serde = { version = "1.0.106", features = ["derive"] }
 tide = "0.6.0"
