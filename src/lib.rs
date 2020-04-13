@@ -61,6 +61,8 @@ use std::{cmp::Ordering, fmt::Display, string::ToString, sync::Mutex, thread};
 use tide::{Request, Response};
 
 pub use const_tweaker_attribute::tweak;
+#[doc(hidden)]
+pub use ctor::ctor;
 
 /// Type representing the const field with metadata.
 #[doc(hidden)]

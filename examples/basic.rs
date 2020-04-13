@@ -44,13 +44,7 @@ const BOOL_VALUE: bool = false;
 #[const_tweaker::tweak]
 const STRING_VALUE: &str = "Hello";
 
-// Value that will be accessed after 10 seconds, which will trigger a page refresh
-#[const_tweaker::tweak]
-const DELAYED_VALUE: &str = "Delayed";
-
 fn main() {
-    let mut countdown = 10i32;
-
     // Print the constant value times every second
     loop {
         dbg!(
@@ -70,12 +64,6 @@ fn main() {
             BOOL_VALUE,
             STRING_VALUE
         );
-
-        // Wait for 10 seconds before printing the delayed value once
-        countdown -= 1;
-        if countdown == 0 {
-            dbg!(DELAYED_VALUE);
-        }
 
         thread::sleep(Duration::from_secs(1));
     }

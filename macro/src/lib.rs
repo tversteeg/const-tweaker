@@ -252,7 +252,7 @@ fn mismatching_type_error<T>(ty: &Type) -> Result<T, TokenStream> {
 /// Proc macro call but with a result, which allows the use of `?`.
 fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, TokenStream> {
     let name = input.ident;
-    let init_name = format_ident!("{}_INIT", name);
+    let init_name = format_ident!("{}_init", name);
     let ty = if let Reference(type_ref) = *input.ty {
         type_ref.elem
     } else {
@@ -411,11 +411,6 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
 
         impl #name {
             pub fn get(&self) -> &'static #ty {
-                // Insert the default value only the first time
-                #init_name.call_once(|| {
-                    const_tweaker::DATA.insert(concat!(module_path!(), "::", stringify!(#name)), #field_init);
-                });
-
                 // Retrieve the value from the datastore and unwrap it
                 match const_tweaker::DATA.get(concat!(module_path!(), "::", stringify!(#name))).expect("Value should have been added already").value() {
                     #field_name { ref value, .. } => unsafe {
@@ -451,10 +446,15 @@ fn tweak_impl(args: AttributeArgs, input: ItemConst) -> Result<TokenStream, Toke
 
         #type_impls
 
-        // The setting of the field in the map is only done once
-        static #init_name: std::sync::Once = std::sync::Once::new();
         // A static variable is created as an instance of the above defined struct
         static #name: #name = #name { __private_field: () };
+
+        #[allow(non_snake_case)]
+        #[const_tweaker::ctor]
+        fn #init_name() {
+            // Insert the value when the module is loaded
+            const_tweaker::DATA.insert(concat!(module_path!(), "::", stringify!(#name)), #field_init);
+        }
     };
 
     Ok(result.into())
