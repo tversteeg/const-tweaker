@@ -11,15 +11,13 @@
 //! #[const_tweaker::tweak]
 //! const VALUE: f64 = 0.0;
 //!
-//! fn main() {
-//!     // Enter a GUI/Game loop
-//!     loop {
-//!         // ...
+//! // Enter a GUI/Game loop
+//! loop {
+//!     // ...
 //!
-//!         // Print the constant value that can be changed from the website.
-//!         println!("VALUE: {}", VALUE);
-//! #       break;
-//!     }
+//!     // Print the constant value that can be changed from the website.
+//!     println!("VALUE: {}", VALUE);
+//! #   break;
 //! }
 //! ```
 //!
