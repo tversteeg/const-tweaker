@@ -570,7 +570,12 @@ fn render_widgets() -> impl Render {
                     h4 (class="title is-4") { : "Changes" }
                     div (class="columns") {
                         div (class="column") {
-                            textarea (class="textarea", id=format!("{}_output", module), readonly, placeholder="No changes")
+                            textarea (
+                                class="textarea",
+                                style="font-family: monospace",
+                                id=format!("{}_output", module),
+                                readonly,
+                                placeholder="No changes")
                         }
                         div (class="column is-narrow control") {
                             button (class="button is-link", onclick=format!("copy_text(\"{}\")", module)) {
