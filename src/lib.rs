@@ -2,7 +2,7 @@
 //!
 //! This library starts a web server at `http://127.0.0.1:9938` where you can change the values of `const` variables in your crate.
 //!
-//! `f64` & `bool` are the types that are currently supported.
+//! `bool`, `&str`, `f32`, `f64`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128` and `usize` are the types that are currently supported.
 //!
 //! ## Example
 //! ```rust
@@ -23,7 +23,7 @@
 //!
 //! Some widgets have customizable options, as seen in the examples below:
 //!
-//! `f64`:
+//! `f32` & `f64`:
 //! ```rust
 //! // Spawns a slider
 //! #[const_tweaker::tweak]
@@ -31,7 +31,14 @@
 //!
 //! // Spawns a slider with 10 steps from 0-1
 //! #[const_tweaker::tweak(min = 0.0, max = 1.0, step = 0.1)]
-//! const CUSTOM_VALUE: f64 = 0.0;
+//! const CUSTOM_VALUE: f32 = 0.0;
+//! ```
+//!
+//! `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128` & `usize`:
+//! ```rust
+//! // Spawns a slider with 90 steps from 100-1000
+//! #[const_tweaker::tweak(min = 100, max = 1000, step = 10)]
+//! const CUSTOM_VALUE: i64 = 0;
 //! ```
 //!
 //! `bool`:
