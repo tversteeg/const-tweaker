@@ -571,7 +571,7 @@ fn render_widgets() -> impl Render {
                             textarea (
                                 class="textarea",
                                 style="font-family: monospace",
-                                id=format!("{}_output", module),
+                                id=format!("{}_output", module.replace("::", "_")),
                                 readonly,
                                 placeholder="No changes")
                         }

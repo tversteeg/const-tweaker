@@ -22,28 +22,37 @@ function send(source, value, data_type) {
 	changed_value(source, value, data_type)
 }
 
-function changed_value(source, value, data_type) {
+function split_name(source) {
 	var split = source.split("::");
-	var module = split[0];
-	var variable = split[1];
+	var variable = split.pop();
+	var module = split.join("::");
+
+	return {
+		variable: variable,
+		module: module
+	}
+}
+
+function changed_value(source, value, data_type) {
+	let names = split_name(source);
 
 	// Create a line and add it to the map
 	var line;
 	if (data_type == "string") {
-		line = "const " + variable + ": &str = \"" + value + "\";"
+		line = "const " + names.variable + ": &str = \"" + value + "\";"
 	} else {
-		line = "const " + variable + ": " + data_type + " = " + value + ";"
+		line = "const " + names.variable + ": " + data_type + " = " + value + ";"
 	}
 	changed_values.set(source, line);
 
 	// Print the whole map for this source
 	let output = "";
 	for (let [map_source, line] of changed_values) {
-		if (module == source.split("::")[0]) {
+		if (names.module == split_name(map_source).module) {
 			output += line + "\n";
 		}
 	}
-	var output_text = document.getElementById(module + "_output");
+	var output_text = document.getElementById(names.module.replace("::", "_") + "_output");
 	output_text.value = output;
 }
 

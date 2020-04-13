@@ -1,3 +1,5 @@
+mod sub_module;
+
 use std::{thread, time::Duration};
 
 // Custom slider minimum value, maximum value & step size
@@ -62,7 +64,7 @@ fn main() {
             U64_VALUE_DEFAULT,
             USIZE_VALUE_DEFAULT,
             BOOL_VALUE,
-            STRING_VALUE
+            STRING_VALUE,
         );
 
         thread::sleep(Duration::from_secs(1));
