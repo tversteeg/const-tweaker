@@ -11,11 +11,7 @@
 //! #[const_tweaker::tweak]
 //! const VALUE: f64 = 0.0;
 //!
-//! fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Initialize the server at 'http://127.0.0.1:9938' when running in debug mode
-//!     #[cfg(debug_assertions)]
-//!     const_tweaker::run()?;
-//!
+//! fn main() {
 //!     // Enter a GUI/Game loop
 //!     loop {
 //!         // ...
@@ -24,8 +20,6 @@
 //!         println!("VALUE: {}", VALUE);
 //! #       break;
 //!     }
-//!
-//!     Ok(())
 //! }
 //! ```
 //!
@@ -59,7 +53,6 @@
 // Ignore the lazy_static warning about the mutex
 #![allow(clippy::mutex_atomic)]
 
-use anyhow::Result;
 use async_std::task;
 use dashmap::DashMap;
 use horrorshow::{html, owned_html, Raw, Render};
@@ -501,7 +494,8 @@ lazy_static::lazy_static! {
 /// Launch the `const` tweaker web service.
 ///
 /// This will launch a web server at `http://127.0.01:9938`.
-pub fn run() -> Result<()> {
+#[ctor::ctor]
+fn run() {
     // Run a blocking web server in a new thread
     thread::spawn(|| {
         task::block_on(async {
@@ -521,8 +515,6 @@ pub fn run() -> Result<()> {
         })
         .expect("Running web server failed");
     });
-
-    Ok(())
 }
 
 /// Build the actual site.

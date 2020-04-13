@@ -1,4 +1,3 @@
-use anyhow::Result;
 use std::{thread, time::Duration};
 
 // Custom slider minimum value, maximum value & step size
@@ -49,11 +48,7 @@ const STRING_VALUE: &str = "Hello";
 #[const_tweaker::tweak]
 const DELAYED_VALUE: &str = "Delayed";
 
-fn main() -> Result<()> {
-    // Run the tweaker server only when in debug mode
-    #[cfg(debug_assertions)]
-    const_tweaker::run()?;
-
+fn main() {
     let mut countdown = 10i32;
 
     // Print the constant value times every second

@@ -16,7 +16,7 @@
 This library opens a web interface when the application is run, allowing you to change the values of constants in real time.
 It's especially useful for gamedev where you want to tweak some variables without introducing a hot-reloading scripting language for it.
 
-After the `const_tweaker::run` call the web GUI to change constants is opened at [`127.0.0.1:9938`](http://127.0.0.1:9938).
+After running your application the web GUI to change constants is opened at [`127.0.0.1:9938`](http://127.0.0.1:9938).
 
 ## Example
 
@@ -26,9 +26,6 @@ After the `const_tweaker::run` call the web GUI to change constants is opened at
 const VALUE: f64 = 0.0;
 
 fn main() {
-	// Initialize the web GUI at 'http://127.0.0.1:9938'
-	const_tweaker::run().expect("Could not run server");
-
 	// Enter a GUI/Game loop
 	loop {
 		// Print the constant value that can be changed from the website
