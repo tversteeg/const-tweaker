@@ -55,6 +55,14 @@
 //! const DEFAULT_VALUE: &str = "Hi";
 //! ```
 
+#![deny(
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style,
+    unused,
+    clippy::all
+)]
 // Ignore the lazy_static warning about the mutex
 #![allow(clippy::mutex_atomic)]
 
@@ -448,7 +456,7 @@ impl Field {
     }
 
     /// Render the bool widget.
-    fn render_bool<'a>(key: &'a str, value: bool) -> impl Render + ToString + 'a {
+    fn render_bool(key: &str, value: bool) -> impl Render + ToString + '_ {
         owned_html! {
             div (class="column") {
                 input (type="checkbox",
@@ -595,7 +603,7 @@ fn render_widgets() -> impl Render {
 }
 
 /// Render a module of widgets.
-fn render_module<'a>(module: &'a str) -> impl Render + 'a {
+fn render_module(module: &str) -> impl Render {
     let mut data = DATA
         .iter()
         .filter(|kv| kv.value().module_path() == module)

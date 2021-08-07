@@ -1,7 +1,15 @@
+#![deny(
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style,
+    unused,
+    clippy::all
+)]
+
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
-use std::{i16, i32, i64, i8, u16, u32, u64, u8, usize};
 use syn::{
     parse_macro_input, spanned::Spanned, AttributeArgs, Error, Expr, ItemConst, Type,
     Type::Reference,
@@ -201,7 +209,7 @@ where
             }
         },
         _ => {
-            return mismatching_type_error(&ty);
+            return mismatching_type_error(ty);
         }
     })
 }
@@ -222,7 +230,7 @@ fn field_name(field_type: &str, ty: &Type) -> Result<TokenStream2, TokenStream> 
         "usize" => Ok(quote! { const_tweaker::Field::Usize }),
         "bool" => Ok(quote! { const_tweaker::Field::Bool }),
         "str" => Ok(quote! { const_tweaker::Field::String }),
-        _ => mismatching_type_error(&ty),
+        _ => mismatching_type_error(ty),
     }
 }
 
@@ -231,10 +239,10 @@ fn field_type(ty: &Type) -> Result<String, TokenStream> {
     if let Type::Path(type_path) = &*ty {
         match type_path.path.get_ident() {
             Some(type_ident) => Ok(type_ident.to_string()),
-            None => mismatching_type_error(&ty),
+            None => mismatching_type_error(ty),
         }
     } else {
-        mismatching_type_error(&ty)
+        mismatching_type_error(ty)
     }
 }
 
