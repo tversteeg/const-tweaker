@@ -14,7 +14,7 @@ categories = ["game-development", "config", "development-tools", "rust-patterns"
 proc-macro = true
 
 [dependencies]
-darling = "0.10.2"
+darling = "0.13.0"
 proc-macro2 = "1.0.9"
 quote = "1.0.3"
 syn = "1.0.16"
